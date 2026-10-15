@@ -45,6 +45,7 @@
 - `reset()` — 把 allCharacters 放回 pool（打乱），drawnCount 归零，重新抽第一个。
 - `addCharacters(from text: String)` — 把输入文本拆成单字、过滤非汉字/空白、去重合并进 allCharacters，保存。
 - `remove(_ character: String)` — 从 allCharacters 删除并保存。
+- `exportString() -> String` — 返回 allCharacters 以空格分隔的字符串（如「欢 给 哈」），用于复制到剪贴板。
 - 首次运行（UserDefaults 无数据）用预置 31 字初始化。
 
 边界与约定：
@@ -67,6 +68,7 @@
   - 导航栏：进入 ManageView 的入口。
 - **ManageView（管理页）**
   - 顶部：多行输入框，可批量粘贴一大段文字；「添加」按钮 → addCharacters。
+  - 「复制全部」按钮：把 exportString()（空格分隔）写入 `UIPasteboard.general.string`，复制后给个简短提示（如短暂 toast / 按钮文案变「已复制」）。
   - 列表：展示 allCharacters，支持左滑删除（remove）。
 
 ## 数据流
@@ -89,6 +91,7 @@
 - reset 后 pool 恢复为全部汉字、drawnCount 归零。
 - addCharacters 去重、过滤空白、合并正确。
 - remove 正确删除。
+- exportString 以空格分隔、顺序与 allCharacters 一致。
 - 进度计数（drawnCount / total）正确。
 
 朗读（AVSpeechSynthesizer）涉及音频硬件，不做自动化测试，手动验证。
