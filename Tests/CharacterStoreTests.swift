@@ -121,4 +121,18 @@ final class CharacterStoreTests: XCTestCase {
         XCTAssertTrue(store2.allCharacters.contains("山"))
         XCTAssertTrue(store2.allCharacters.contains("水"))
     }
+
+    func test_addCharacters_acceptsExtensionBIdeograph() {
+        let store = makeEmptyStore()
+        store.replaceAllForTesting([])
+        store.addCharacters(from: "\u{20000}") // CJK Ext B ideograph (single Unicode scalar)
+        XCTAssertEqual(store.allCharacters, ["\u{20000}"])
+    }
+
+    func test_addCharacters_allDuplicatesDoesNotMutate() {
+        let store = makeEmptyStore()
+        store.replaceAllForTesting(["山", "水"])
+        store.addCharacters(from: "山水山水") // every char already exists
+        XCTAssertEqual(store.allCharacters, ["山", "水"]) // unchanged, nothing appended
+    }
 }
