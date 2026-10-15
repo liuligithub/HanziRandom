@@ -6,7 +6,7 @@ struct HanziRandomApp: App {
 
     var body: some Scene {
         WindowGroup {
-            Text("placeholder")
+            DrawView()
                 .environmentObject(store)
         }
     }
