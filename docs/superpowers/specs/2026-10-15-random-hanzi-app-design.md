@@ -44,7 +44,7 @@
 方法：
 - `drawNext()` — 从 pool 随机取一个移出，设为 current，drawnCount +1。pool 空则进入 finished 状态。
 - `reset()` — 把 allCharacters 放回 pool（打乱），drawnCount 归零，重新抽第一个。
-- `addCharacters(from text: String)` — 把输入文本拆成单字、过滤非汉字/空白、去重合并进 allCharacters，保存。
+- `addCharacters(from text: String)` — 把输入文本拆成单字、过滤非汉字/空白、去重后合并进 allCharacters，保存。去重为双重：(1) 输入文本内部重复的字只保留一个；(2) 已存在于 allCharacters 的字跳过。新字按首次出现顺序追加到末尾。
 - `remove(_ character: String)` — 从 allCharacters 删除并保存。
 - `exportString() -> String` — 返回 allCharacters 以空格分隔的字符串（如「欢 给 哈」），同时用于复制到剪贴板和分享到备忘录。
 - 首次运行（UserDefaults 无数据）用预置 31 字初始化。
@@ -52,7 +52,7 @@
 边界与约定：
 - 空字库：allCharacters 为空时，主页显示提示「请先在管理页添加汉字」，「下一个」不可用。
 - 「一个字」= 一个 Unicode 字符（这里都是单个 CJK 汉字）。拆分按字符拆。
-- 去重：合并时跳过已存在的字。
+- 去重：既跳过已存在于字库的字，也合并输入文本内部的重复（同一个字在一次输入里只加一次）。
 
 ### SpeechService — 朗读封装
 
@@ -101,7 +101,7 @@
 - drawNext 在一轮内不重复抽字。
 - 抽到最后一个后 isFinished 为 true、pool 为空。
 - reset 后 pool 恢复为全部汉字、drawnCount 归零。
-- addCharacters 去重、过滤空白、合并正确。
+- addCharacters 去重（跟已有库去重 + 输入内部去重两种情况）、过滤空白/非汉字、保留首次出现顺序、合并正确。
 - remove 正确删除。
 - exportString 以空格分隔、顺序与 allCharacters 一致。
 - 进度计数（drawnCount / total）正确。
