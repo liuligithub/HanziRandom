@@ -58,4 +58,27 @@ final class CharacterStoreTests: XCTestCase {
         XCTAssertEqual(store.drawnCount, finalCount)
         XCTAssertTrue(store.isFinished)
     }
+
+    func test_reset_restoresFullPoolAndDrawsFirst() {
+        let store = makeEmptyStore()
+        store.startRound()
+        store.drawNext()
+        store.drawNext()
+        store.reset()
+        XCTAssertEqual(store.drawnCount, 1)
+        XCTAssertEqual(store.total, 30)
+        XCTAssertNotNil(store.current)
+        XCTAssertFalse(store.isFinished)
+        XCTAssertEqual(store.pool.count, 29) // 30 total - 1 drawn
+    }
+
+    func test_emptyLibrary_startRound_isFinishedWithNoCurrent() {
+        let store = makeEmptyStore()
+        store.replaceAllForTesting([])
+        store.startRound()
+        XCTAssertNil(store.current)
+        XCTAssertTrue(store.isFinished)
+        XCTAssertEqual(store.total, 0)
+        XCTAssertEqual(store.drawnCount, 0)
+    }
 }

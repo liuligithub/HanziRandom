@@ -33,11 +33,15 @@ final class CharacterStore: ObservableObject {
 
     /// Begin a fresh round: shuffle the whole library into the pool and draw the first.
     func startRound() {
-        pool = allCharacters.shuffled()
         total = allCharacters.count
         drawnCount = 0
         current = nil
         isFinished = false
+        pool = allCharacters.shuffled()
+        if pool.isEmpty {
+            isFinished = true
+            return
+        }
         drawNext()
     }
 
@@ -55,4 +59,17 @@ final class CharacterStore: ObservableObject {
             isFinished = true
         }
     }
+
+    /// Reset to a brand-new shuffled round (same as startRound; kept distinct for the
+    /// UI's "重置" button so intent reads clearly).
+    func reset() {
+        startRound()
+    }
+
+    #if DEBUG
+    /// Test-only: replace the whole library without touching persistence semantics.
+    func replaceAllForTesting(_ characters: [String]) {
+        allCharacters = characters
+    }
+    #endif
 }
