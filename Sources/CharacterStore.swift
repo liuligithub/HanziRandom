@@ -98,6 +98,19 @@ final class CharacterStore: ObservableObject {
             || (0x20000...0x2A6DF).contains(v) // CJK Ext B
     }
 
+    /// Remove a character from the library and persist. No-op if absent.
+    func remove(_ character: String) {
+        guard let idx = allCharacters.firstIndex(of: character) else { return }
+        allCharacters.remove(at: idx)
+        persist()
+    }
+
+    /// Space-joined representation of the whole library, used for both clipboard copy
+    /// and ShareLink export.
+    func exportString() -> String {
+        allCharacters.joined(separator: " ")
+    }
+
     #if DEBUG
     /// Test-only: replace the whole library without touching persistence semantics.
     func replaceAllForTesting(_ characters: [String]) {

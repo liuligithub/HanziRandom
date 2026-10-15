@@ -135,4 +135,36 @@ final class CharacterStoreTests: XCTestCase {
         store.addCharacters(from: "山水山水") // every char already exists
         XCTAssertEqual(store.allCharacters, ["山", "水"]) // unchanged, nothing appended
     }
+
+    func test_remove_deletesAndPersists() {
+        let suite = "test.remove.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defaults.removePersistentDomain(forName: suite)
+        let store = CharacterStore(defaults: defaults)
+        store.addCharacters(from: "山水田") // persisted (preset + these)
+        store.remove("水")
+        XCTAssertFalse(store.allCharacters.contains("水"))
+
+        let reloaded = CharacterStore(defaults: defaults)
+        XCTAssertFalse(reloaded.allCharacters.contains("水"))
+    }
+
+    func test_remove_nonexistent_isNoOp() {
+        let store = makeEmptyStore()
+        store.replaceAllForTesting(["山", "水"])
+        store.remove("田")
+        XCTAssertEqual(store.allCharacters, ["山", "水"])
+    }
+
+    func test_exportString_spaceJoinedInOrder() {
+        let store = makeEmptyStore()
+        store.replaceAllForTesting(["欢", "给", "哈"])
+        XCTAssertEqual(store.exportString(), "欢 给 哈")
+    }
+
+    func test_exportString_empty_returnsEmptyString() {
+        let store = makeEmptyStore()
+        store.replaceAllForTesting([])
+        XCTAssertEqual(store.exportString(), "")
+    }
 }
