@@ -8,6 +8,11 @@ final class CharacterStore: ObservableObject {
     ]
 
     @Published private(set) var allCharacters: [String]
+    @Published private(set) var pool: [String] = []
+    @Published private(set) var current: String?
+    @Published private(set) var total: Int = 0
+    @Published private(set) var drawnCount: Int = 0
+    @Published private(set) var isFinished: Bool = false
 
     private let defaults: UserDefaults
     private static let storageKey = "allCharacters"
@@ -24,5 +29,30 @@ final class CharacterStore: ObservableObject {
 
     private func persist() {
         defaults.set(allCharacters, forKey: Self.storageKey)
+    }
+
+    /// Begin a fresh round: shuffle the whole library into the pool and draw the first.
+    func startRound() {
+        pool = allCharacters.shuffled()
+        total = allCharacters.count
+        drawnCount = 0
+        current = nil
+        isFinished = false
+        drawNext()
+    }
+
+    /// Draw one character out of the pool (no repeats). When the pool empties, finish.
+    func drawNext() {
+        guard !isFinished else { return }
+        guard !pool.isEmpty else {
+            isFinished = true
+            return
+        }
+        let index = Int.random(in: 0..<pool.count)
+        current = pool.remove(at: index)
+        drawnCount += 1
+        if pool.isEmpty {
+            isFinished = true
+        }
     }
 }
