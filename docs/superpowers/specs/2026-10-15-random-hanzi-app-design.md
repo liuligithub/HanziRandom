@@ -24,6 +24,7 @@
 - SwiftUI，iOS 16+
 - `UserDefaults` 做持久化
 - `AVSpeechSynthesizer` 做中文朗读
+- `UIPasteboard` 做复制，SwiftUI `ShareLink` 做分享到备忘录
 - 无第三方依赖
 
 ## 架构与组件
@@ -45,7 +46,7 @@
 - `reset()` — 把 allCharacters 放回 pool（打乱），drawnCount 归零，重新抽第一个。
 - `addCharacters(from text: String)` — 把输入文本拆成单字、过滤非汉字/空白、去重合并进 allCharacters，保存。
 - `remove(_ character: String)` — 从 allCharacters 删除并保存。
-- `exportString() -> String` — 返回 allCharacters 以空格分隔的字符串（如「欢 给 哈」），用于复制到剪贴板。
+- `exportString() -> String` — 返回 allCharacters 以空格分隔的字符串（如「欢 给 哈」），同时用于复制到剪贴板和分享到备忘录。
 - 首次运行（UserDefaults 无数据）用预置 31 字初始化。
 
 边界与约定：
@@ -68,11 +69,19 @@
   - 导航栏：进入 ManageView 的入口。
 - **ManageView（管理页）**
   - 顶部：多行输入框，可批量粘贴一大段文字；「添加」按钮 → addCharacters。
-  - 「复制全部」按钮：把 exportString()（空格分隔）写入 `UIPasteboard.general.string`，复制后给个简短提示（如短暂 toast / 按钮文案变「已复制」）。
+  - 导出区（两个并排操作，内容都是 exportString() 空格分隔的全部汉字）：
+    - 「复制到剪贴板」按钮：写入 `UIPasteboard.general.string`，复制后给简短提示（按钮文案短暂变「已复制」）。
+    - 「存到备忘录」：用 SwiftUI `ShareLink`（iOS 16+）弹出系统分享菜单，用户选「备忘录」即存成一条笔记，也可分享到微信/邮件等。（iOS 无公开 API 直接写入备忘录，分享菜单是唯一正规做法。）
   - 列表：展示 allCharacters，支持左滑删除（remove）；点某一行 → 弹出 CharacterDetailView（sheet）。
 - **CharacterDetailView（字详情，sheet 弹出）**
   - 把该字放大居中显示；点击大字 → SpeechService.speak 中文朗读。
+  - 「复制」按钮：复制这一个字到剪贴板。
   - 关闭按钮返回管理页。
+- **单字复制（贯穿各处）**
+  - 主页当前大字：长按出现「复制」菜单（contextMenu），复制当前这个字。
+  - 管理页列表每行：行尾「复制」按钮 / 左滑或 contextMenu，复制该字。
+  - 字详情：如上，有「复制」按钮。
+  - 均通过 `UIPasteboard.general.string = 单字` 实现。
 
 ## 数据流
 
