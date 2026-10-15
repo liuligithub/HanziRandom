@@ -81,4 +81,44 @@ final class CharacterStoreTests: XCTestCase {
         XCTAssertEqual(store.total, 0)
         XCTAssertEqual(store.drawnCount, 0)
     }
+
+    func test_addCharacters_appendsNewUniqueInOrder() {
+        let store = makeEmptyStore()
+        store.replaceAllForTesting(["欢", "给"])
+        store.addCharacters(from: "山水田")
+        XCTAssertEqual(store.allCharacters, ["欢", "给", "山", "水", "田"])
+    }
+
+    func test_addCharacters_skipsExisting() {
+        let store = makeEmptyStore()
+        store.replaceAllForTesting(["欢", "给"])
+        store.addCharacters(from: "给山欢水")
+        XCTAssertEqual(store.allCharacters, ["欢", "给", "山", "水"])
+    }
+
+    func test_addCharacters_dedupsWithinInput() {
+        let store = makeEmptyStore()
+        store.replaceAllForTesting([])
+        store.addCharacters(from: "山山水山田水")
+        XCTAssertEqual(store.allCharacters, ["山", "水", "田"])
+    }
+
+    func test_addCharacters_filtersWhitespaceAndNonHanzi() {
+        let store = makeEmptyStore()
+        store.replaceAllForTesting([])
+        store.addCharacters(from: " 山a水\n1，田! 水 ")
+        XCTAssertEqual(store.allCharacters, ["山", "水", "田"])
+    }
+
+    func test_addCharacters_persists() {
+        let suite = "test.persist.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defaults.removePersistentDomain(forName: suite)
+        let store1 = CharacterStore(defaults: defaults)
+        store1.replaceAllForTesting([]) // note: replaceAllForTesting does not persist
+        store1.addCharacters(from: "山水")   // addCharacters DOES persist
+        let store2 = CharacterStore(defaults: defaults)
+        XCTAssertTrue(store2.allCharacters.contains("山"))
+        XCTAssertTrue(store2.allCharacters.contains("水"))
+    }
 }

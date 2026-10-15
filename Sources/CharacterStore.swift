@@ -66,6 +66,38 @@ final class CharacterStore: ObservableObject {
         startRound()
     }
 
+    /// Merge characters parsed from arbitrary pasted text into the library.
+    /// Rules: split by Character, keep only CJK ideographs, dedup within the input
+    /// (first occurrence wins) and against the existing library, append in first-seen order.
+    func addCharacters(from text: String) {
+        let existing = Set(allCharacters)
+        var seenThisInput = Set<String>()
+        var toAppend: [String] = []
+
+        for ch in text {
+            let s = String(ch)
+            guard Self.isHanzi(ch) else { continue }
+            guard !existing.contains(s), !seenThisInput.contains(s) else { continue }
+            seenThisInput.insert(s)
+            toAppend.append(s)
+        }
+
+        guard !toAppend.isEmpty else { return }
+        allCharacters.append(contentsOf: toAppend)
+        persist()
+    }
+
+    /// True when the character is a single CJK unified ideograph (common + ext-A + compatibility).
+    static func isHanzi(_ ch: Character) -> Bool {
+        let scalars = ch.unicodeScalars
+        guard scalars.count == 1, let scalar = scalars.first else { return false }
+        let v = scalar.value
+        return (0x4E00...0x9FFF).contains(v)   // CJK Unified Ideographs
+            || (0x3400...0x4DBF).contains(v)   // CJK Ext A
+            || (0xF900...0xFAFF).contains(v)   // CJK Compatibility Ideographs
+            || (0x20000...0x2A6DF).contains(v) // CJK Ext B
+    }
+
     #if DEBUG
     /// Test-only: replace the whole library without touching persistence semantics.
     func replaceAllForTesting(_ characters: [String]) {
