@@ -69,7 +69,10 @@
 - **ManageView（管理页）**
   - 顶部：多行输入框，可批量粘贴一大段文字；「添加」按钮 → addCharacters。
   - 「复制全部」按钮：把 exportString()（空格分隔）写入 `UIPasteboard.general.string`，复制后给个简短提示（如短暂 toast / 按钮文案变「已复制」）。
-  - 列表：展示 allCharacters，支持左滑删除（remove）。
+  - 列表：展示 allCharacters，支持左滑删除（remove）；点某一行 → 弹出 CharacterDetailView（sheet）。
+- **CharacterDetailView（字详情，sheet 弹出）**
+  - 把该字放大居中显示；点击大字 → SpeechService.speak 中文朗读。
+  - 关闭按钮返回管理页。
 
 ## 数据流
 
