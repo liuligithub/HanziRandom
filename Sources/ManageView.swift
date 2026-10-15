@@ -64,9 +64,7 @@ struct ManageView: View {
                 .onTapGesture { detailCharacter = ch }
             }
             .onDelete { offsets in
-                for index in offsets {
-                    store.remove(store.allCharacters[index])
-                }
+                offsets.map { store.allCharacters[$0] }.forEach(store.remove)
             }
         }
     }
