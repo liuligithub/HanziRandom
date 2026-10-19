@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -19,6 +21,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
@@ -35,7 +39,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -47,6 +50,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -60,6 +64,7 @@ import com.liuli.hanzirandom.ui.theme.cardBackground
 
 enum class StudyMode { Learning, Review }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun StudyScreen(
     state: SessionState,
@@ -86,14 +91,25 @@ fun StudyScreen(
             .background(HanziColors.SoftYellow.copy(alpha = 0.25f)),
         contentAlignment = Alignment.TopCenter
     ) {
-        Column(
-            modifier = Modifier
-                .widthIn(max = 560.dp)
-                .fillMaxWidth()
-                .fillMaxHeight()
-                .padding(horizontal = 20.dp, vertical = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            val compact = maxHeight < 560.dp ||
+                LocalDensity.current.fontScale > 1.15f
+            val scrollState = rememberScrollState()
+            Column(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .widthIn(max = 560.dp)
+                    .fillMaxWidth()
+                    .then(
+                        if (compact) {
+                            Modifier.verticalScroll(scrollState)
+                        } else {
+                            Modifier.fillMaxHeight()
+                        }
+                    )
+                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -138,28 +154,49 @@ fun StudyScreen(
                     },
                     modifier = Modifier
                         .padding(top = 8.dp)
-                        .width(240.dp),
+                        .width(240.dp)
+                        .testTag("progressBar"),
                     color = HanziColors.AccentDeep,
                     trackColor = HanziColors.SoftYellow
                 )
             }
 
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp)
-            ) {
-                CharacterArea(
-                    state = state,
-                    fontSize = fontSize,
-                    swipeEnabled = swipeEnabled,
-                    mode = mode,
-                    onNext = { haptic(); onNext() },
-                    onPrevious = { haptic(); onPrevious() },
-                    onOpenSettings = onOpenSettings,
-                    onCopy = { current -> copyToClipboard(context, current) }
-                )
+            if (compact) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(260.dp)
+                        .padding(vertical = 12.dp)
+                ) {
+                    CharacterArea(
+                        state = state,
+                        fontSize = fontSize,
+                        swipeEnabled = swipeEnabled,
+                        mode = mode,
+                        onNext = { haptic(); onNext() },
+                        onPrevious = { haptic(); onPrevious() },
+                        onOpenSettings = onOpenSettings,
+                        onCopy = { current -> copyToClipboard(context, current) }
+                    )
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp)
+                ) {
+                    CharacterArea(
+                        state = state,
+                        fontSize = fontSize,
+                        swipeEnabled = swipeEnabled,
+                        mode = mode,
+                        onNext = { haptic(); onNext() },
+                        onPrevious = { haptic(); onPrevious() },
+                        onOpenSettings = onOpenSettings,
+                        onCopy = { current -> copyToClipboard(context, current) }
+                    )
+                }
             }
 
             if (state.current != null) {
@@ -168,16 +205,21 @@ fun StudyScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     val current = state.current
-                    Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
                         PillButton(
                             text = "读一读",
                             onClick = { onSpeak(current) },
+                            modifier = Modifier.testTag("speakButton"),
                             style = PillStyle.Secondary,
                             icon = Icons.Filled.VolumeUp
                         )
                         PillButton(
                             text = if (justAddedMistake) "已加入 ✓" else "加入错题本",
                             onClick = { haptic(); onAddMistake(current) },
+                            modifier = Modifier.testTag("addMistakeButton"),
                             style = PillStyle.Secondary,
                             icon = if (justAddedMistake) {
                                 Icons.Filled.CheckCircle
@@ -190,6 +232,7 @@ fun StudyScreen(
                         PillButton(
                             text = "删除错题",
                             onClick = { haptic(); onRemoveMistake(current) },
+                            modifier = Modifier.testTag("deleteMistakeButton"),
                             style = PillStyle.Danger,
                             icon = Icons.Filled.Delete
                         )
@@ -206,6 +249,7 @@ fun StudyScreen(
                     onNext = { haptic(); onNext() },
                     onReset = { haptic(); onReset() }
                 )
+            }
             }
         }
     }
@@ -231,7 +275,6 @@ private fun CharacterArea(
     if (current == null) return
 
     var showMenu by remember { mutableStateOf(false) }
-    var drag by remember { mutableFloatStateOf(0f) }
 
     BoxWithConstraints(
         modifier = Modifier
@@ -239,6 +282,7 @@ private fun CharacterArea(
             .cardBackground()
             .pointerInput(swipeEnabled, current) {
                 if (!swipeEnabled) return@pointerInput
+                var drag = 0f
                 detectHorizontalDragGestures(
                     onHorizontalDrag = { change, amount ->
                         change.consume()
@@ -255,6 +299,9 @@ private fun CharacterArea(
             .combinedClickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
+                onClickLabel = "下一个",
+                onLongClickLabel = "复制",
+                role = Role.Button,
                 onClick = onNext,
                 onLongClick = { showMenu = true }
             )
@@ -348,15 +395,22 @@ private fun BottomControls(
             PillButton(
                 text = "上一个",
                 onClick = onPrevious,
+                modifier = Modifier.testTag("previousButton"),
                 style = PillStyle.Secondary,
                 enabled = state.canGoPrevious
             )
             if (showReset) {
-                PillButton(text = "重置", onClick = onReset, style = PillStyle.Primary)
+                PillButton(
+                    text = "重置",
+                    onClick = onReset,
+                    modifier = Modifier.testTag("resetButton"),
+                    style = PillStyle.Primary
+                )
             } else {
                 PillButton(
                     text = "下一个",
                     onClick = onNext,
+                    modifier = Modifier.testTag("nextButton"),
                     style = PillStyle.Primary,
                     enabled = state.canGoNext
                 )

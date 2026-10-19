@@ -48,13 +48,17 @@ class StudyViewModel(
     companion object {
         fun factory(app: HanziApplication): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
-                @Suppress("UNCHECKED_CAST")
-                override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                    StudyViewModel(
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    require(modelClass.isAssignableFrom(StudyViewModel::class.java)) {
+                        "Unknown ViewModel class: ${modelClass.name}"
+                    }
+                    @Suppress("UNCHECKED_CAST")
+                    return StudyViewModel(
                         app.characterRepository,
                         app.settingsRepository,
                         app.speechService
                     ) as T
+                }
             }
     }
 }
