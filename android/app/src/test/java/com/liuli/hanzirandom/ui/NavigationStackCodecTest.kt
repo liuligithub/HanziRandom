@@ -14,6 +14,11 @@ class NavigationStackCodecTest {
     }
 
     @Test
+    fun roundTrip_settings() {
+        assertEquals(AppScreen.Settings, decode(encode(AppScreen.Settings)))
+    }
+
+    @Test
     fun roundTrip_detail() {
         assertEquals(AppScreen.Detail("马"), decode(encode(AppScreen.Detail("马"))))
     }
@@ -40,6 +45,16 @@ class NavigationStackCodecTest {
             AppScreen.Review(listOf("山", "水"), 42L),
             decode("review" + sep + "42" + sep + "山" + sep + "水")
         )
+    }
+
+    @Test
+    fun decode_settings() {
+        assertEquals(AppScreen.Settings, decode("settings"))
+    }
+
+    @Test
+    fun decode_settingsWithExtraParts_returnsNull() {
+        assertNull(decode("settings" + sep + "extra"))
     }
 
     @Test

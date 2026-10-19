@@ -67,7 +67,28 @@ fun HanziRandomApp(app: HanziApplication) {
             MainTabs(
                 app = app,
                 onDetail = { stack.add(AppScreen.Detail(it)) },
-                onReview = { stack.add(AppScreen.Review(it, System.nanoTime())) }
+                onReview = { stack.add(AppScreen.Review(it, System.nanoTime())) },
+                onSettings = { stack.add(AppScreen.Settings) }
+            )
+        }
+
+        AppScreen.Settings -> {
+            val vm: SettingsViewModel = viewModel(factory = SettingsViewModel.factory(app))
+            val library by vm.library.collectAsStateWithLifecycle()
+            val fontSize by vm.fontSize.collectAsStateWithLifecycle()
+            val swipeEnabled by vm.swipeEnabled.collectAsStateWithLifecycle()
+            SettingsScreen(
+                library = library,
+                fontSize = fontSize,
+                swipeEnabled = swipeEnabled,
+                onFontSizeChange = vm::setFontSize,
+                onSwipeEnabledChange = vm::setSwipeEnabled,
+                onResetRound = vm::resetRound,
+                onAddCharacters = vm::addCharacters,
+                onRemove = vm::remove,
+                onExportString = vm::exportString,
+                onDetail = { stack.add(AppScreen.Detail(it)) },
+                onClose = pop
             )
         }
 
@@ -90,7 +111,8 @@ fun HanziRandomApp(app: HanziApplication) {
 private fun MainTabs(
     app: HanziApplication,
     onDetail: (String) -> Unit,
-    onReview: (List<String>) -> Unit
+    onReview: (List<String>) -> Unit,
+    onSettings: () -> Unit
 ) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
     val tabStateHolder = rememberSaveableStateHolder()
@@ -130,7 +152,7 @@ private fun MainTabs(
         ) {
             if (tab == 0) {
                 tabStateHolder.SaveableStateProvider("tab-study") {
-                    StudyTab(app, onOpenSettings = {})
+                    StudyTab(app, onOpenSettings = onSettings)
                 }
             } else {
                 tabStateHolder.SaveableStateProvider("tab-mistakes") {
@@ -138,7 +160,7 @@ private fun MainTabs(
                         app = app,
                         onDetail = onDetail,
                         onReview = onReview,
-                        onOpenSettings = {}
+                        onOpenSettings = onSettings
                     )
                 }
             }

@@ -2,6 +2,7 @@ package com.liuli.hanzirandom.ui
 
 sealed interface AppScreen {
     data object Main : AppScreen
+    data object Settings : AppScreen
     data class Detail(val character: String) : AppScreen
     data class Review(val characters: List<String>, val id: Long) : AppScreen
 }
@@ -11,6 +12,7 @@ internal object NavigationStackCodec {
 
     fun encode(screen: AppScreen): String = when (screen) {
         AppScreen.Main -> "main"
+        AppScreen.Settings -> "settings"
         is AppScreen.Detail -> "detail" + SEPARATOR + screen.character
         is AppScreen.Review -> "review" + SEPARATOR + screen.id + SEPARATOR +
             screen.characters.joinToString(SEPARATOR)
@@ -20,6 +22,7 @@ internal object NavigationStackCodec {
         val parts = encoded.split(SEPARATOR)
         return when (parts.firstOrNull()) {
             "main" -> if (parts.size == 1) AppScreen.Main else null
+            "settings" -> if (parts.size == 1) AppScreen.Settings else null
             "detail" -> {
                 val character = parts.getOrNull(1)
                 if (parts.size == 2 && !character.isNullOrEmpty()) {
