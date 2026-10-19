@@ -72,7 +72,8 @@ android/
 - 对外暴露 `StateFlow`，供 Compose 与 ViewModel 订阅。
 - 方法：`startRound`、`reset`、`addMistake`、`removeMistake`、`clearMistakes`、`mistakesSorted`、`addCharacters(from text)`、`isHanzi`、`remove`、`exportString`、`persistRound`、`restoreRound`。
 - 持久化键与 iOS 一致：`allCharacters`、`mistakes`、`roundSnapshot`。
-- 字库与错题用 `org.json`（Android 内置）序列化；轮次快照存 `pool/history/cursor/total/finished`。
+- 字库/轮次用换行分隔的纯文本编码，错题用 `字\t次数` 行；每个条目都是单个汉字（不含换行/制表符），编码无歧义。这样仓库逻辑可在纯 JVM 单测中运行（`org.json` 在 Android 单元测试桩中不可用）。
+- 轮次快照存 `pool/history/cursor/total/finished`，编码首行为元信息、其后为池与历史条目。
 - 恢复轮次时沿用 iOS 的合法性校验：`total == pool.size + history.size`，且 `(history 为空 && cursor == -1)` 或 `(history 非空 && cursor 在范围内)`。
 
 ### SettingsRepository
