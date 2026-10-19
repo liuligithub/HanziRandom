@@ -1,7 +1,7 @@
 <resources>
-    <style name="Theme.HanziRandom" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:forceDarkAllowed">false</item>
+    <style name="Theme.HanziRandom.Base" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowLightStatusBar">true</item>
-        <item name="android:windowLightNavigationBar">true</item>
     </style>
+
+    <style name="Theme.HanziRandom" parent="Theme.HanziRandom.Base" />
 </resources>

@@ -1,0 +1,6 @@
+<resources>
+    <style name="Theme.HanziRandom" parent="Theme.HanziRandom.Base">
+        <item name="android:forceDarkAllowed">false</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+</resources>
