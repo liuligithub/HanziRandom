@@ -91,7 +91,6 @@ class DrawSession(characters: List<String> = emptyList()) {
             _state.value = s.copy(
                 history = history,
                 cursor = cursor,
-                current = if (cursor in history.indices) history[cursor] else null,
                 total = maxOf(0, s.total - 1),
                 drawnCount = history.size,
                 isFinished = s.pool.isEmpty()

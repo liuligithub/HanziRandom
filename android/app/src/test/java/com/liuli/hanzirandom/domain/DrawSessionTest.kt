@@ -95,6 +95,134 @@ class DrawSessionTest {
     }
 
     @Test
+    fun removeCharacter_beforeCursorWhileCurrentIsNull_keepsCurrentNull() {
+        val session = DrawSession(emptyList())
+        session.restore(
+            RoundSnapshot(
+                pool = emptyList(),
+                history = listOf("甲", "乙", "丙"),
+                cursor = 2,
+                total = 3,
+                isFinished = true
+            )
+        )
+        session.removeCurrent()
+        assertNull(session.state.value.current)
+
+        session.removeCharacter("甲")
+
+        val s = session.state.value
+        assertNull(s.current)
+        assertEquals(listOf("乙"), s.history)
+        assertEquals(0, s.cursor)
+    }
+
+    @Test
+    fun removeCharacter_historyBeforeCursor_keepsCurrentAndShiftsCursor() {
+        val session = DrawSession(emptyList())
+        session.restore(
+            RoundSnapshot(
+                pool = listOf("丁"),
+                history = listOf("甲", "乙", "丙"),
+                cursor = 2,
+                total = 4,
+                isFinished = false
+            )
+        )
+
+        session.removeCharacter("甲")
+
+        val s = session.state.value
+        assertEquals("丙", s.current)
+        assertEquals(1, s.cursor)
+        assertEquals(listOf("乙", "丙"), s.history)
+        assertEquals(3, s.total)
+        assertEquals(2, s.drawnCount)
+        assertFalse(s.isFinished)
+    }
+
+    @Test
+    fun removeCharacter_historyAfterCursor_keepsCurrentAndCursor() {
+        val session = DrawSession(emptyList())
+        session.restore(
+            RoundSnapshot(
+                pool = listOf("丁"),
+                history = listOf("甲", "乙", "丙"),
+                cursor = 0,
+                total = 4,
+                isFinished = false
+            )
+        )
+
+        session.removeCharacter("丙")
+
+        val s = session.state.value
+        assertEquals("甲", s.current)
+        assertEquals(0, s.cursor)
+        assertEquals(listOf("甲", "乙"), s.history)
+        assertEquals(3, s.total)
+        assertEquals(2, s.drawnCount)
+        assertFalse(s.isFinished)
+    }
+
+    @Test
+    fun removeCurrent_afterGoPrevious_showsNextHistoryEntry() {
+        val session = DrawSession(emptyList())
+        session.restore(
+            RoundSnapshot(
+                pool = emptyList(),
+                history = listOf("甲", "乙", "丙"),
+                cursor = 2,
+                total = 3,
+                isFinished = true
+            )
+        )
+        session.goPrevious()
+
+        session.removeCurrent()
+
+        val s = session.state.value
+        assertEquals("丙", s.current)
+        assertEquals(1, s.cursor)
+        assertEquals(listOf("甲", "丙"), s.history)
+        assertEquals(2, s.total)
+        assertEquals(2, s.drawnCount)
+        assertTrue(s.isFinished)
+    }
+
+    @Test
+    fun appendToPool_midRound_extendsPoolAndTotal() {
+        val session = DrawSession(emptyList())
+        session.restore(
+            RoundSnapshot(
+                pool = listOf("丙"),
+                history = listOf("甲"),
+                cursor = 0,
+                total = 2,
+                isFinished = false
+            )
+        )
+
+        session.appendToPool(listOf("丁"))
+
+        val s = session.state.value
+        assertEquals(listOf("丙", "丁"), s.pool)
+        assertEquals(3, s.total)
+        assertEquals("甲", s.current)
+    }
+
+    @Test
+    fun appendToPool_afterFinished_isNoOp() {
+        val session = DrawSession(listOf("甲"))
+        val before = session.state.value
+        assertTrue(before.isFinished)
+
+        session.appendToPool(listOf("乙"))
+
+        assertEquals(before, session.state.value)
+    }
+
+    @Test
     fun restore_reproducesState() {
         val session = DrawSession(emptyList())
         session.restore(

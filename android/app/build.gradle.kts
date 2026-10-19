@@ -49,6 +49,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
     implementation("androidx.lifecycle:lifecycle-process:2.8.6")
     implementation("androidx.core:core-splashscreen:1.0.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
 
