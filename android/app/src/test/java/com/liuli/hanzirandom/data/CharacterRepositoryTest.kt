@@ -120,14 +120,14 @@ class CharacterRepositoryTest {
     @Test
     fun addCharacters_persists() {
         val store = InMemoryKeyValueStore()
-        val first = repositoryWith(listOf("欢", "给"))
-        // 复用同一份存储验证持久化
-        store.putString("allCharacters", first.library.value.joinToString("\n"))
+        store.putString("allCharacters", "欢\n给")
+        val first = CharacterRepository(store)
+
+        val added = first.addCharacters("山水")
+
+        assertEquals(2, added)
         val second = CharacterRepository(store)
-        second.addCharacters("山水")
-        val third = CharacterRepository(store)
-        assertTrue(third.library.value.contains("山"))
-        assertTrue(third.library.value.contains("水"))
+        assertEquals(listOf("欢", "给", "山", "水"), second.library.value)
     }
 
     @Test
@@ -160,15 +160,31 @@ class CharacterRepositoryTest {
     }
 
     @Test
+    fun addCharacters_toEmptyLibrary_startsNewRound() {
+        val repo = repositoryWith(emptyList())
+        assertTrue(repo.session.state.value.isFinished)
+        assertEquals(0, repo.session.state.value.total)
+
+        repo.addCharacters("山水")
+
+        val state = repo.session.state.value
+        assertEquals(2, state.total)
+        assertNotNull(state.current)
+        assertFalse(state.isFinished)
+    }
+
+    @Test
     fun remove_deletesAndPersists() {
         val store = InMemoryKeyValueStore()
+        store.putString("allCharacters", "欢\n给")
         val repo = CharacterRepository(store)
-        repo.addCharacters("山")
-        repo.remove("山")
-        assertFalse(repo.library.value.contains("山"))
+        assertEquals(1, repo.addCharacters("山"))
 
+        repo.remove("山")
+
+        assertFalse(repo.library.value.contains("山"))
         val reloaded = CharacterRepository(store)
-        assertFalse(reloaded.library.value.contains("山"))
+        assertEquals(listOf("欢", "给"), reloaded.library.value)
     }
 
     @Test
@@ -307,6 +323,30 @@ class CharacterRepositoryTest {
         val repo = CharacterRepository(store)
         assertEquals(2, repo.session.state.value.total)
         assertNotNull(repo.session.state.value.current)
+    }
+
+    @Test
+    fun malformedSnapshots_areDiscardedAndRemoved() {
+        val malformed = listOf(
+            "garbage",
+            "0|1|true|2147483647|2147483647\n甲",
+            "0|2|true|1|1\n甲",
+            "5|2|true|1|1\n甲\n乙",
+            "-1|2|false|1|1\n甲\n乙",
+            "0|2|maybe|1|1\n甲\n乙",
+            "0|2|true|1\n甲\n乙"
+        )
+        for (raw in malformed) {
+            val store = InMemoryKeyValueStore()
+            store.putString("allCharacters", "甲\n乙")
+            store.putString("roundSnapshot", raw)
+
+            val repo = CharacterRepository(store)
+
+            assertEquals("raw=$raw", 2, repo.session.state.value.total)
+            assertNotNull("raw=$raw", repo.session.state.value.current)
+            assertNull("raw=$raw", store.getString("roundSnapshot"))
+        }
     }
 
     @Test

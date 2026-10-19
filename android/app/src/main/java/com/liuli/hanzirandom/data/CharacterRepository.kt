@@ -67,12 +67,18 @@ class CharacterRepository(private val store: KeyValueStore) {
 
     private fun restoreSnapshot(): RoundSnapshot? {
         val raw = store.getString(KEY_ROUND) ?: return null
-        val snapshot = RoundCodec.decode(raw) ?: return null
-        if (snapshot.total != snapshot.pool.size + snapshot.history.size) return null
-        val cursorValid =
-            (snapshot.history.isEmpty() && snapshot.cursor == -1) ||
-                (snapshot.history.isNotEmpty() && snapshot.cursor in snapshot.history.indices)
-        return if (cursorValid) snapshot else null
+        val snapshot = RoundCodec.decode(raw)
+        val valid = snapshot != null &&
+            snapshot.total == snapshot.pool.size + snapshot.history.size &&
+            (
+                (snapshot.history.isEmpty() && snapshot.cursor == -1) ||
+                    (snapshot.history.isNotEmpty() && snapshot.cursor in snapshot.history.indices)
+                )
+        if (!valid) {
+            store.remove(KEY_ROUND)
+            return null
+        }
+        return snapshot
     }
 
     // MARK: - Mistake book
@@ -131,7 +137,11 @@ class CharacterRepository(private val store: KeyValueStore) {
         if (toAppend.isEmpty()) return 0
         _library.value = _library.value + toAppend
         store.putString(KEY_LIBRARY, encodeList(_library.value))
-        session.appendToPool(toAppend)
+        if (session.state.value.total == 0) {
+            session.restart(_library.value)
+        } else {
+            session.appendToPool(toAppend)
+        }
         persistRound()
         return toAppend.size
     }
@@ -160,7 +170,7 @@ class CharacterRepository(private val store: KeyValueStore) {
         return raw.lineSequence().mapNotNull { line ->
             val parts = line.split('\t')
             val char = parts.getOrNull(0)?.takeIf { it.isNotEmpty() } ?: return@mapNotNull null
-            val count = parts.getOrNull(1)?.toIntOrNull() ?: return@mapNotNull null
+            val count = parts.getOrNull(1)?.toIntOrNull()?.takeIf { it > 0 } ?: return@mapNotNull null
             char to count
         }.toMap()
     }
@@ -215,7 +225,7 @@ private object RoundCodec {
         if (poolSize < 0 || historySize < 0) return null
 
         val items = lines.drop(1)
-        if (items.size < poolSize + historySize) return null
+        if (poolSize > items.size || historySize > items.size - poolSize) return null
         val pool = items.subList(0, poolSize)
         val history = items.subList(poolSize, poolSize + historySize)
         if (pool.any { it.isEmpty() } || history.any { it.isEmpty() }) return null
