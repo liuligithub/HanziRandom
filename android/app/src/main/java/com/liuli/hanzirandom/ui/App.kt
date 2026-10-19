@@ -16,7 +16,6 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -36,39 +35,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.liuli.hanzirandom.HanziApplication
 import com.liuli.hanzirandom.ui.theme.HanziColors
 
-sealed interface AppScreen {
-    data object Main : AppScreen
-    data class Detail(val character: String) : AppScreen
-    data class Review(val characters: List<String>, val id: Long) : AppScreen
-}
-
-private const val ROUTE_SEPARATOR = "\u001F"
-
 private val screenStackSaver = listSaver<SnapshotStateList<AppScreen>, String>(
-    save = { stack -> stack.map { encodeScreen(it).joinToString(ROUTE_SEPARATOR) } },
+    save = { stack -> stack.map { NavigationStackCodec.encode(it) } },
     restore = { saved ->
         saved
-            .map { decodeScreen(it.split(ROUTE_SEPARATOR)) }
+            .mapNotNull { NavigationStackCodec.decode(it) }
             .ifEmpty { listOf(AppScreen.Main) }
             .toMutableStateList()
     }
 )
-
-private fun encodeScreen(screen: AppScreen): List<String> = when (screen) {
-    AppScreen.Main -> listOf("main")
-    is AppScreen.Detail -> listOf("detail", screen.character)
-    is AppScreen.Review -> listOf("review", screen.id.toString(), *screen.characters.toTypedArray())
-}
-
-private fun decodeScreen(parts: List<String>): AppScreen = when (parts.firstOrNull()) {
-    "main" -> AppScreen.Main
-    "detail" -> parts.getOrNull(1)?.let { AppScreen.Detail(it) } ?: AppScreen.Main
-    "review" -> {
-        val id = parts.getOrNull(1)?.toLongOrNull()
-        if (id != null) AppScreen.Review(parts.drop(2), id) else AppScreen.Main
-    }
-    else -> AppScreen.Main
-}
 
 @Composable
 fun HanziRandomApp(app: HanziApplication) {
@@ -76,9 +51,15 @@ fun HanziRandomApp(app: HanziApplication) {
         mutableStateListOf<AppScreen>(AppScreen.Main)
     }
     val stateHolder = rememberSaveableStateHolder()
+    val reviewHost: ReviewSessionHost = viewModel()
+
+    val pop = {
+        val removed = stack.removeAt(stack.lastIndex)
+        if (removed is AppScreen.Review) reviewHost.release(removed.id)
+    }
 
     BackHandler(enabled = stack.size > 1) {
-        stack.removeAt(stack.lastIndex)
+        pop()
     }
 
     when (val screen = stack.last()) {
@@ -93,13 +74,14 @@ fun HanziRandomApp(app: HanziApplication) {
         is AppScreen.Detail -> CharacterDetailScreen(
             character = screen.character,
             onSpeak = { app.speechService.speak(it) },
-            onClose = { stack.removeAt(stack.lastIndex) }
+            onClose = pop
         )
 
         is AppScreen.Review -> ReviewRoute(
             app = app,
             screen = screen,
-            onClose = { stack.removeAt(stack.lastIndex) }
+            reviewHost = reviewHost,
+            onClose = pop
         )
     }
 }
@@ -213,15 +195,13 @@ private fun MistakeBookTab(
 private fun ReviewRoute(
     app: HanziApplication,
     screen: AppScreen.Review,
+    reviewHost: ReviewSessionHost,
     onClose: () -> Unit
 ) {
     val owner = remember(screen.id) {
         object : ViewModelStoreOwner {
-            override val viewModelStore = ViewModelStore()
+            override val viewModelStore: ViewModelStore = reviewHost.storeFor(screen.id)
         }
-    }
-    DisposableEffect(owner) {
-        onDispose { owner.viewModelStore.clear() }
     }
     val vm: ReviewViewModel = viewModel(
         viewModelStoreOwner = owner,
