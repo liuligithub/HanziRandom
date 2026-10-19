@@ -1,0 +1,72 @@
+name: HanziRandom
+options:
+  bundleIdPrefix: com.liuli.hanzirandom
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+schemes:
+  HanziRandom:
+    build:
+      targets:
+        HanziRandom: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - HanziRandomTests
+        - HanziRandomUITests
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    GENERATE_INFOPLIST_FILE: YES
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  HanziRandom:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+    info:
+      path: Info.plist
+      properties:
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+          UIImageName: LaunchLogo
+        UIAppFonts:
+          - LXGWWenKaiGBLite-Regular.ttf
+        UIUserInterfaceStyle: Light
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        "UISupportedInterfaceOrientations~ipad":
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.liuli.hanzirandom
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        TARGETED_DEVICE_FAMILY: "1,2"
+  HanziRandomTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Tests
+    dependencies:
+      - target: HanziRandom
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.liuli.hanzirandom.tests
+  HanziRandomUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: UITests
+    dependencies:
+      - target: HanziRandom
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.liuli.hanzirandom.uitests

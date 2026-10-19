@@ -1,0 +1,12 @@
+# Xcode / build
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+.DS_Store
+
+# XcodeGen generates this; keep it out of VCS
+HanziRandom.xcodeproj/
+
+# XcodeGen regenerates Info.plist from project.yml
+Info.plist
