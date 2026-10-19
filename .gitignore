@@ -10,3 +10,11 @@ HanziRandom.xcodeproj/
 
 # XcodeGen regenerates Info.plist from project.yml
 Info.plist
+
+# Android
+android/.gradle/
+android/.idea/
+android/local.properties
+android/**/build/
+android/captures/
+*.iml
