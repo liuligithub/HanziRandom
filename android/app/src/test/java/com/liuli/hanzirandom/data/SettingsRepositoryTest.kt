@@ -21,6 +21,9 @@ class SettingsRepositoryTest {
         first.setFontSize(200f)
         first.setSwipeEnabled(false)
 
+        assertEquals(200f, store.getFloat("fontSize", -1f), 0.001f)
+        assertFalse(store.getBoolean("swipeEnabled", true))
+
         val second = SettingsRepository(store)
         assertEquals(200f, second.fontSize.value, 0.001f)
         assertFalse(second.swipeEnabled.value)
@@ -33,5 +36,14 @@ class SettingsRepositoryTest {
         assertEquals(60f, repo.fontSize.value, 0.001f)
         repo.setFontSize(999f)
         assertEquals(260f, repo.fontSize.value, 0.001f)
+
+        val store = InMemoryKeyValueStore()
+        val repo2 = SettingsRepository(store)
+        repo2.setFontSize(10f)
+        assertEquals(60f, store.getFloat("fontSize", -1f), 0.001f)
+        repo2.setFontSize(60f)
+        assertEquals(60f, repo2.fontSize.value, 0.001f)
+        repo2.setFontSize(260f)
+        assertEquals(260f, repo2.fontSize.value, 0.001f)
     }
 }

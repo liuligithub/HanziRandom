@@ -12,7 +12,7 @@ class SettingsRepository(private val store: KeyValueStore) {
     val swipeEnabled: StateFlow<Boolean> = _swipeEnabled.asStateFlow()
 
     fun setFontSize(value: Float) {
-        val clamped = value.coerceIn(60f, 260f)
+        val clamped = value.coerceIn(FONT_SIZE_MIN, FONT_SIZE_MAX)
         _fontSize.value = clamped
         store.putFloat(KEY_FONT_SIZE, clamped)
     }
@@ -25,5 +25,7 @@ class SettingsRepository(private val store: KeyValueStore) {
     companion object {
         const val KEY_FONT_SIZE = "fontSize"
         const val KEY_SWIPE_ENABLED = "swipeEnabled"
+        const val FONT_SIZE_MIN = 60f
+        const val FONT_SIZE_MAX = 260f
     }
 }
