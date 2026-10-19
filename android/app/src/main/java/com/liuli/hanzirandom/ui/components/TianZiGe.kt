@@ -27,7 +27,7 @@ fun TianZiGe(modifier: Modifier = Modifier) {
             color = color,
             topLeft = Offset(left, top),
             size = Size(side, side),
-            style = Stroke(width = stroke)
+            style = Stroke(width = stroke, pathEffect = dash)
         )
         drawLine(
             color = color,

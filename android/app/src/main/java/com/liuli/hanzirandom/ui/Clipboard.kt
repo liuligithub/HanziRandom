@@ -1,5 +1,6 @@
 package com.liuli.hanzirandom.ui
 
+import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -15,5 +16,9 @@ fun shareText(context: Context, text: String) {
         type = "text/plain"
         putExtra(Intent.EXTRA_TEXT, text)
     }
-    context.startActivity(Intent.createChooser(send, "分享字库"))
+    val chooser = Intent.createChooser(send, "分享字库")
+    if (context !is Activity) {
+        chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    runCatching { context.startActivity(chooser) }
 }

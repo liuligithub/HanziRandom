@@ -26,6 +26,7 @@ object HanziColors {
     val Danger = Color(0xFFD13D2E)
     val DangerSoft = Color(0xFFFFEDE6)
     val TextPrimary = Color(0xFF3B2A1A)
+    val Background = Color(0xFFFFFBF5)
 }
 
 val HanziCardCornerRadius = 28.dp
@@ -44,10 +45,19 @@ fun HanziRandomTheme(content: @Composable () -> Unit) {
             primary = HanziColors.AccentDeep,
             onPrimary = Color.White,
             secondary = HanziColors.Accent,
-            background = Color(0xFFFFFBF5),
+            background = HanziColors.Background,
             onBackground = HanziColors.TextPrimary,
             surface = HanziColors.CardBackground,
             onSurface = HanziColors.TextPrimary,
+            surfaceVariant = Color(0xFFF6E3C8),
+            onSurfaceVariant = Color(0xFF6B5642),
+            surfaceContainerLowest = Color(0xFFFFFFFF),
+            surfaceContainerLow = Color(0xFFFFF8ED),
+            surfaceContainer = Color(0xFFFFF1DD),
+            surfaceContainerHigh = Color(0xFFFFEBD0),
+            surfaceContainerHighest = Color(0xFFFFE4C1),
+            outline = Color(0xFFC9A77D),
+            outlineVariant = Color(0xFFE7D3B5),
             error = HanziColors.Danger
         ),
         typography = Typography(),
