@@ -280,6 +280,7 @@ private fun CharacterArea(
         modifier = Modifier
             .fillMaxSize()
             .cardBackground()
+            .testTag("characterCard")
             .pointerInput(swipeEnabled, current) {
                 var drag = 0f
                 detectHorizontalDragGestures(
