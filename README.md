@@ -87,3 +87,57 @@ project.yml                 XcodeGen 配置（工程唯一来源）
 ## 设计文档
 
 实现细节与需求约定见 [设计文档](docs/superpowers/specs/2026-10-15-random-hanzi-app-design.md)。
+
+## Android 版
+
+Android 版位于 `android/`，与 iOS 版功能对齐（Kotlin + Jetpack Compose）。
+
+<table>
+  <tr>
+    <td><img src="docs/screenshots/android/study.png" width="240" alt="学习页"></td>
+    <td><img src="docs/screenshots/android/settings.png" width="240" alt="设置页"></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/android/mistake-book.png" width="240" alt="错题本"></td>
+    <td><img src="docs/screenshots/android/detail.png" width="240" alt="汉字详情"></td>
+  </tr>
+</table>
+
+### 环境要求
+
+- JDK 17（AGP 要求）：`brew install --cask temurin@17`
+- Android SDK Platform 35
+- 模拟器或真机（Android 8.0 / API 26+）
+
+### 构建与安装
+
+```bash
+cd android
+JAVA_HOME=$(/usr/libexec/java_home -v 17) ./gradlew assembleDebug
+JAVA_HOME=$(/usr/libexec/java_home -v 17) ./gradlew installDebug
+```
+
+### 测试
+
+```bash
+cd android
+JAVA_HOME=$(/usr/libexec/java_home -v 17) ./gradlew testDebugUnitTest
+JAVA_HOME=$(/usr/libexec/java_home -v 17) ./gradlew connectedDebugAndroidTest
+```
+
+### 结构
+
+```
+android/app/src/main/java/com/liuli/hanzirandom/
+  MainActivity.kt            单 Activity 入口
+  HanziApplication.kt        仓库、朗读、后台轮次保存
+  data/                      KeyValueStore、字库/错题/设置仓库
+  domain/                    DrawSession 状态机、TextToSpeech 封装
+  ui/                        Compose 页面、ViewModel、主题与组件
+android/app/src/main/res/font/
+  lxgw_wenkai_gb_lite_regular.ttf   内嵌正楷字体
+```
+
+Android 版同样内嵌霞鹜文楷字体，不申请任何权限，全程无网络请求。
+
+设计文档见 [docs/superpowers/specs/2026-10-19-android-port-design.md](docs/superpowers/specs/2026-10-19-android-port-design.md)。
