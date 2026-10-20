@@ -281,7 +281,6 @@ private fun CharacterArea(
             .fillMaxSize()
             .cardBackground()
             .pointerInput(swipeEnabled, current) {
-                if (!swipeEnabled) return@pointerInput
                 var drag = 0f
                 detectHorizontalDragGestures(
                     onHorizontalDrag = { change, amount ->
@@ -289,8 +288,10 @@ private fun CharacterArea(
                         drag += amount
                     },
                     onDragEnd = {
-                        val threshold = 40.dp.toPx()
-                        if (drag < -threshold) onNext() else if (drag > threshold) onPrevious()
+                        if (swipeEnabled) {
+                            val threshold = 40.dp.toPx()
+                            if (drag < -threshold) onNext() else if (drag > threshold) onPrevious()
+                        }
                         drag = 0f
                     },
                     onDragCancel = { drag = 0f }
