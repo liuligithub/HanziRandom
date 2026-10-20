@@ -1,15 +1,27 @@
 # 随机汉字 HanziRandom
 
-一个用于识字练习的 iOS App：从字库中随机抽字展示，配合正楷大字、田字格、朗读和错题本，一轮内不重复。
+一个用于识字练习的 iOS / Android App：从字库中随机抽字展示，配合正楷大字、田字格、朗读和错题本，一轮内不重复。
 
 <table>
   <tr>
-    <td><img src="docs/screenshots/study.jpg" width="240" alt="学习页"></td>
-    <td><img src="docs/screenshots/settings.jpg" width="240" alt="设置页"></td>
+    <td align="center"><b>iOS</b></td>
+    <td align="center"><b>Android</b></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/mistake-book.jpg" width="240" alt="错题本"></td>
-    <td><img src="docs/screenshots/detail.jpg" width="240" alt="汉字详情"></td>
+    <td><img src="docs/screenshots/study.jpg" width="240" alt="iOS 学习页"></td>
+    <td><img src="docs/screenshots/android/study.png" width="240" alt="Android 学习页"></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/settings.jpg" width="240" alt="iOS 设置页"></td>
+    <td><img src="docs/screenshots/android/settings.png" width="240" alt="Android 设置页"></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/mistake-book.jpg" width="240" alt="iOS 错题本"></td>
+    <td><img src="docs/screenshots/android/mistake-book.png" width="240" alt="Android 错题本"></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/detail.jpg" width="240" alt="iOS 汉字详情"></td>
+    <td><img src="docs/screenshots/android/detail.png" width="240" alt="Android 汉字详情"></td>
   </tr>
 </table>
 
@@ -21,15 +33,17 @@
 - **字库管理**：粘贴整段文字批量添加（自动过滤非汉字、去重）、删除、复制、导出分享
 - **错题本**：记录错字次数并排序，支持按错题复习；复习中可直接删除错题，清空前有确认
 - **本地持久化**：字库、错题、当前轮次进度、字号与手势偏好均保存在本机，全程无网络请求
-- **iPad 适配**：内容栏限宽居中，横竖屏均可用
+- **大屏适配**：内容栏限宽居中，手机与平板、横竖屏均可用
 
-## 环境要求
+## iOS
+
+### 环境要求
 
 - iOS 16.0+
 - Xcode 26（使用 iOS 模拟器或真机运行）
 - [XcodeGen](https://github.com/yonaskolb/XcodeGen)：`brew install xcodegen`
 
-## 构建
+### 构建
 
 `HanziRandom.xcodeproj` 和 `Info.plist` 由 `project.yml` 生成，不纳入版本管理：
 
@@ -46,7 +60,7 @@ xcodebuild -project HanziRandom.xcodeproj -scheme HanziRandom \
   -destination 'platform=iOS Simulator,name=iPhone 15 Pro' build
 ```
 
-## 测试
+### 测试
 
 ```bash
 xcodebuild test -project HanziRandom.xcodeproj -scheme HanziRandom \
@@ -56,7 +70,7 @@ xcodebuild test -project HanziRandom.xcodeproj -scheme HanziRandom \
 - `Tests/`：`CharacterStore` 的增删改查与持久化、`DrawSession` 的抽卡逻辑、朗读服务的音频会话配置
 - `UITests/`：学习页导航、错题本、详情页、复习模式和清空确认
 
-## 项目结构
+### 项目结构
 
 ```
 Sources/
@@ -78,30 +92,9 @@ docs/                       设计文档
 project.yml                 XcodeGen 配置（工程唯一来源）
 ```
 
-## 字体
+## Android
 
-界面中的汉字使用 [霞鹜文楷 GB Lite（LXGW WenKai GB Lite）](https://github.com/lxgw/LxgwWenKai)，遵循 SIL Open Font License 1.1，授权文本见 `Sources/Resources/Fonts/OFL.txt`。
-
-字体随 App 内嵌，是因为 iOS 系统运行时（包括模拟器）没有楷体字体，直接使用 `Kaiti SC` 会静默回退成黑体。
-
-## 设计文档
-
-实现细节与需求约定见 [设计文档](docs/superpowers/specs/2026-10-15-random-hanzi-app-design.md)。
-
-## Android 版
-
-Android 版位于 `android/`，与 iOS 版功能对齐（Kotlin + Jetpack Compose）。
-
-<table>
-  <tr>
-    <td><img src="docs/screenshots/android/study.png" width="240" alt="学习页"></td>
-    <td><img src="docs/screenshots/android/settings.png" width="240" alt="设置页"></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screenshots/android/mistake-book.png" width="240" alt="错题本"></td>
-    <td><img src="docs/screenshots/android/detail.png" width="240" alt="汉字详情"></td>
-  </tr>
-</table>
+Android 版位于 `android/`，使用 Kotlin + Jetpack Compose，与 iOS 版功能对齐。
 
 ### 环境要求
 
@@ -125,7 +118,10 @@ JAVA_HOME=$(/usr/libexec/java_home -v 17) ./gradlew testDebugUnitTest
 JAVA_HOME=$(/usr/libexec/java_home -v 17) ./gradlew connectedDebugAndroidTest
 ```
 
-### 结构
+- `src/test/`：字库/错题仓库、单轮抽卡状态机、设置仓库、导航栈编解码（纯 JVM）
+- `src/androidTest/`：Compose 冒烟测试（学习页、Tab 切换、滑动手势）
+
+### 项目结构
 
 ```
 android/app/src/main/java/com/liuli/hanzirandom/
@@ -138,6 +134,15 @@ android/app/src/main/res/font/
   lxgw_wenkai_gb_lite_regular.ttf   内嵌正楷字体
 ```
 
-Android 版同样内嵌霞鹜文楷字体，不申请任何权限，全程无网络请求。
+Android 版不申请任何权限，全程无网络请求。
 
-设计文档见 [docs/superpowers/specs/2026-10-19-android-port-design.md](docs/superpowers/specs/2026-10-19-android-port-design.md)。
+## 字体
+
+界面中的汉字使用 [霞鹜文楷 GB Lite（LXGW WenKai GB Lite）](https://github.com/lxgw/LxgwWenKai)，遵循 SIL Open Font License 1.1。iOS 授权文本见 `Sources/Resources/Fonts/OFL.txt`，Android 授权文本见 `android/app/src/main/res/raw/ofl.txt`。
+
+字体随 App 内嵌，是因为 iOS 系统运行时（包括模拟器）没有楷体字体，直接使用 `Kaiti SC` 会静默回退成黑体；Android 同样内嵌以保证两个平台显示一致。
+
+## 设计文档
+
+- iOS：[2026-10-15-random-hanzi-app-design.md](docs/superpowers/specs/2026-10-15-random-hanzi-app-design.md)
+- Android：[2026-10-19-android-port-design.md](docs/superpowers/specs/2026-10-19-android-port-design.md)
