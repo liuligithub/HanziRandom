@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
@@ -43,6 +42,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -54,6 +54,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -84,17 +87,31 @@ fun SettingsScreen(
     var preview by remember { mutableFloatStateOf(fontSize) }
     var input by rememberSaveable { mutableStateOf("") }
     var copiedAll by remember { mutableStateOf(false) }
+    var copyToken by remember { mutableIntStateOf(0) }
+
+    fun showToast(message: String) {
+        scope.launch {
+            snackbarHostState.currentSnackbarData?.dismiss()
+            snackbarHostState.showSnackbar(message)
+        }
+    }
 
     LaunchedEffect(fontSize) {
         preview = fontSize
+    }
+
+    LaunchedEffect(copyToken) {
+        if (copyToken > 0) {
+            delay(1500)
+            copiedAll = false
+        }
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(HanziColors.SoftYellow.copy(alpha = 0.25f))
-            .safeDrawingPadding()
-            .imePadding(),
+            .safeDrawingPadding(),
         contentAlignment = Alignment.TopCenter
     ) {
         Column(
@@ -173,6 +190,10 @@ fun SettingsScreen(
                                 modifier = Modifier
                                     .weight(1f)
                                     .padding(horizontal = 8.dp)
+                                    .semantics {
+                                        contentDescription = "字号"
+                                        stateDescription = preview.toInt().toString()
+                                    }
                                     .testTag("fontSizeSlider")
                             )
                             Text("大", fontSize = 12.sp, color = HanziColors.TextPrimary.copy(alpha = 0.6f))
@@ -206,7 +227,9 @@ fun SettingsScreen(
                             Switch(
                                 checked = swipeEnabled,
                                 onCheckedChange = onSwipeEnabledChange,
-                                modifier = Modifier.testTag("swipeSwitch")
+                                modifier = Modifier
+                                    .semantics { contentDescription = "左右滑动切换" }
+                                    .testTag("swipeSwitch")
                             )
                         }
                     }
@@ -279,11 +302,9 @@ fun SettingsScreen(
                                 onClick = {
                                     val added = onAddCharacters(input)
                                     input = ""
-                                    scope.launch {
-                                        snackbarHostState.showSnackbar(
-                                            if (added > 0) "已添加 $added 个汉字" else "没有新增汉字"
-                                        )
-                                    }
+                                    showToast(
+                                        if (added > 0) "已添加 $added 个汉字" else "没有新增汉字"
+                                    )
                                 },
                                 enabled = input.isNotEmpty(),
                                 modifier = Modifier.testTag("addCharactersButton")
@@ -312,11 +333,9 @@ fun SettingsScreen(
                                 onClick = {
                                     copyToClipboard(context, onExportString())
                                     copiedAll = true
-                                    scope.launch {
-                                        delay(1500)
-                                        copiedAll = false
-                                    }
+                                    copyToken++
                                 },
+                                enabled = library.isNotEmpty(),
                                 modifier = Modifier
                                     .weight(1f)
                                     .testTag("copyAllButton")
@@ -328,6 +347,7 @@ fun SettingsScreen(
                             }
                             OutlinedButton(
                                 onClick = { shareText(context, onExportString()) },
+                                enabled = library.isNotEmpty(),
                                 modifier = Modifier
                                     .weight(1f)
                                     .testTag("shareAllButton")
@@ -352,7 +372,7 @@ fun SettingsScreen(
                         character = character,
                         onCopy = {
                             copyToClipboard(context, character)
-                            scope.launch { snackbarHostState.showSnackbar("已复制 $character") }
+                            showToast("已复制 $character")
                         },
                         onRemove = { onRemove(character) },
                         onDetail = { onDetail(character) }
@@ -379,15 +399,14 @@ private fun CharacterRow(
     onDetail: () -> Unit
 ) {
     val dismissState = rememberSwipeToDismissBoxState(
-        confirmValueChange = { value ->
-            if (value == SwipeToDismissBoxValue.EndToStart) {
-                onRemove()
-                true
-            } else {
-                false
-            }
-        }
+        confirmValueChange = { value -> value == SwipeToDismissBoxValue.EndToStart }
     )
+
+    LaunchedEffect(dismissState.currentValue) {
+        if (dismissState.currentValue == SwipeToDismissBoxValue.EndToStart) {
+            onRemove()
+        }
+    }
 
     SwipeToDismissBox(
         state = dismissState,
@@ -412,7 +431,11 @@ private fun CharacterRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(HanziColors.CardBackground)
-                .clickable(role = Role.Button, onClick = onDetail)
+                .clickable(
+                    role = Role.Button,
+                    onClickLabel = "查看详情",
+                    onClick = onDetail
+                )
                 .testTag("libraryRow-$character")
                 .padding(horizontal = 12.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically

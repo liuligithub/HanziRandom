@@ -58,6 +58,11 @@ class NavigationStackCodecTest {
     }
 
     @Test
+    fun decode_settingsWithTrailingSeparator_returnsNull() {
+        assertNull(decode("settings" + sep))
+    }
+
+    @Test
     fun decode_empty_returnsNull() {
         assertNull(decode(""))
     }

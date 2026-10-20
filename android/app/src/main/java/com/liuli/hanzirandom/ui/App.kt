@@ -56,6 +56,7 @@ fun HanziRandomApp(app: HanziApplication) {
     val pop = {
         val removed = stack.removeAt(stack.lastIndex)
         if (removed is AppScreen.Review) reviewHost.release(removed.id)
+        if (removed is AppScreen.Settings) stateHolder.removeState("settings")
     }
 
     BackHandler(enabled = stack.size > 1) {
@@ -72,8 +73,9 @@ fun HanziRandomApp(app: HanziApplication) {
             )
         }
 
-        AppScreen.Settings -> {
-            val vm: SettingsViewModel = viewModel(factory = SettingsViewModel.factory(app))
+        AppScreen.Settings -> stateHolder.SaveableStateProvider("settings") {
+            val factory = remember(app) { SettingsViewModel.factory(app) }
+            val vm: SettingsViewModel = viewModel(factory = factory)
             val library by vm.library.collectAsStateWithLifecycle()
             val fontSize by vm.fontSize.collectAsStateWithLifecycle()
             val swipeEnabled by vm.swipeEnabled.collectAsStateWithLifecycle()
