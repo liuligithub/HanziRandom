@@ -173,7 +173,7 @@ android/
 - 添加文本含非汉字/重复：静默过滤与去重，不报错。
 - 朗读引擎不可用：静默失败，不崩溃。
 - 轮次快照非法：丢弃并正常启动。
-- TTS 在 `ViewModel.onCleared` 或 Application 生命周期结束时释放。
+- TTS 由 Application 持有；应用退到后台（`ProcessLifecycleOwner.onStop`）时释放，再次朗读时按需重新初始化。
 
 ## 测试
 

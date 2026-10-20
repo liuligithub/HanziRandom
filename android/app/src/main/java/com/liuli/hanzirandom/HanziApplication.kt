@@ -22,6 +22,7 @@ class HanziApplication : Application() {
             object : DefaultLifecycleObserver {
                 override fun onStop(owner: LifecycleOwner) {
                     characterRepository.persistRound()
+                    speechService.shutdown()
                 }
             }
         )

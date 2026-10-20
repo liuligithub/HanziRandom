@@ -54,9 +54,11 @@ fun HanziRandomApp(app: HanziApplication) {
     val reviewHost: ReviewSessionHost = viewModel()
 
     val pop = {
-        val removed = stack.removeAt(stack.lastIndex)
-        if (removed is AppScreen.Review) reviewHost.release(removed.id)
-        if (removed is AppScreen.Settings) stateHolder.removeState("settings")
+        if (stack.size > 1) {
+            val removed = stack.removeAt(stack.lastIndex)
+            if (removed is AppScreen.Review) reviewHost.release(removed.id)
+            if (removed is AppScreen.Settings) stateHolder.removeState("settings")
+        }
     }
 
     BackHandler(enabled = stack.size > 1) {

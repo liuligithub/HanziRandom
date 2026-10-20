@@ -9,11 +9,13 @@ import java.util.Locale
  * silently to no audio, matching the iOS spec.
  */
 class SpeechService(context: Context) {
+    private val appContext = context.applicationContext
     private var tts: TextToSpeech? = null
     private var ready = false
 
-    init {
-        tts = TextToSpeech(context.applicationContext) { status ->
+    private fun ensureInitialized() {
+        if (tts != null) return
+        tts = TextToSpeech(appContext) { status ->
             if (status == TextToSpeech.SUCCESS) {
                 val result = tts?.setLanguage(Locale.SIMPLIFIED_CHINESE)
                 ready = tts != null &&
@@ -24,7 +26,9 @@ class SpeechService(context: Context) {
     }
 
     fun speak(text: String) {
-        if (!ready || text.isEmpty()) return
+        if (text.isEmpty()) return
+        ensureInitialized()
+        if (!ready) return
         tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "hanzi-${System.nanoTime()}")
     }
 
