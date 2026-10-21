@@ -18,7 +18,7 @@ struct MistakeBookView: View {
                 List {
                     Section {
                         Button {
-                            reviewCharacters = entries.map(\.char)
+                            startReview()
                         } label: {
                             HStack(spacing: 10) {
                                 Image(systemName: "play.circle.fill")
@@ -48,7 +48,7 @@ struct MistakeBookView: View {
             ToolbarItem(placement: .topBarLeading) {
                 if !entries.isEmpty {
                     Button {
-                        reviewCharacters = entries.map(\.char)
+                        startReview()
                     } label: {
                         Label("复习错题", systemImage: "play.circle.fill")
                             .foregroundStyle(Theme.accentDeep)
@@ -96,6 +96,10 @@ struct MistakeBookView: View {
         )) { payload in
             MistakeReviewView(characters: payload.characters)
         }
+    }
+
+    private func startReview() {
+        reviewCharacters = entries.map(\.char)
     }
 
     private func row(for entry: (char: String, count: Int)) -> some View {
