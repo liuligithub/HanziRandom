@@ -7,7 +7,7 @@ struct ManageView: View {
     @AppStorage("fontSize") private var fontSize: Double = 150
     @AppStorage("swipeEnabled") private var swipeEnabled: Bool = true
     @State private var inputText: String = ""
-    @State private var copiedAll = false
+    @StateObject private var copiedAll = TransientFlag()
     @State private var detailCharacter: String?
     @State private var toastMessage: String?
     @State private var toastToken = 0
@@ -127,12 +127,9 @@ struct ManageView: View {
 
     private var exportSection: some View {
         Section("导出全部") {
-            Button(copiedAll ? "已复制" : "复制到剪贴板") {
+            Button(copiedAll.isOn ? "已复制" : "复制到剪贴板") {
                 UIPasteboard.general.string = store.exportString()
-                copiedAll = true
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                    copiedAll = false
-                }
+                copiedAll.trigger()
             }
             ShareLink("存到备忘录", item: store.exportString())
         }
