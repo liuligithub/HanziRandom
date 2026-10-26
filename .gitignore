@@ -5,11 +5,9 @@ DerivedData/
 xcuserdata/
 .DS_Store
 
-# XcodeGen generates this; keep it out of VCS
-HanziRandom.xcodeproj/
-
-# XcodeGen regenerates Info.plist from project.yml
-Info.plist
+# NOTE: committing .xcodeproj + Info.plist so Xcode 14 at home can open directly
+# (objectVersion lowered to 56 for Xcode 14 compatibility)
+HanziRandom.xcodeproj/xcuserdata/
 
 # Android
 android/.gradle/

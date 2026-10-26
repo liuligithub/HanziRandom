@@ -1,5 +1,23 @@
 import SwiftUI
 
+/// A self-resetting "✓ done" flag (e.g. "已复制") backed by one `@State Bool`.
+/// Flip it on with `.set(_:resetting:)`; it turns itself off after `seconds`,
+/// and a rapid re-tap cancels any earlier pending reset so the flag doesn't
+/// clear while it's still meant to be shown.
+@MainActor
+final class TransientFlag: ObservableObject {
+    @Published private(set) var isOn = false
+    private var pending: DispatchWorkItem?
+
+    func trigger(for seconds: Double = 1.5) {
+        isOn = true
+        pending?.cancel()
+        let work = DispatchWorkItem { [weak self] in self?.isOn = false }
+        pending = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + seconds, execute: work)
+    }
+}
+
 /// Shared visual language: warm orange accent, rounded cards, soft shadows.
 enum Theme {
     static let accent = Color(red: 1.0, green: 0.62, blue: 0.25)

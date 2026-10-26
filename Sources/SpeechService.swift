@@ -3,9 +3,10 @@ import AVFoundation
 /// Long-lived shared instance. AVSpeechSynthesizer must outlive the `speak` call —
 /// a per-View instance gets deallocated as soon as the View struct is torn down,
 /// which kills the utterance before it starts.
+@MainActor
 final class SpeechService: NSObject, AVSpeechSynthesizerDelegate {
     static let shared = SpeechService()
-    nonisolated(unsafe) private let synthesizer: AVSpeechSynthesizer
+    private let synthesizer: AVSpeechSynthesizer
 
     private override init() {
         // Default category is .soloAmbient, which the Ring/Silent switch mutes on
@@ -31,13 +32,15 @@ final class SpeechService: NSObject, AVSpeechSynthesizerDelegate {
     }
 
     // Release the session so speech doesn't keep other apps' audio interrupted.
-    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
-        deactivateAudioSessionIfIdle()
+    // AVSpeechSynthesizer may invoke delegate callbacks off the main thread, so
+    // hop back to the main actor before touching our state.
+    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
+        Task { @MainActor in deactivateAudioSessionIfIdle() }
     }
 
     // Stopping a previous utterance also ends via didCancel, not didFinish.
-    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
-        deactivateAudioSessionIfIdle()
+    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
+        Task { @MainActor in deactivateAudioSessionIfIdle() }
     }
 
     private func deactivateAudioSessionIfIdle() {

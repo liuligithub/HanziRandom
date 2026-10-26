@@ -5,7 +5,7 @@ struct CharacterDetailView: View {
 
     @Environment(\.dismiss) private var dismiss
     private let speech = SpeechService.shared
-    @State private var copied = false
+    @StateObject private var copied = TransientFlag()
 
     var body: some View {
         NavigationStack {
@@ -31,12 +31,9 @@ struct CharacterDetailView: View {
                     .buttonStyle(SecondaryPillButtonStyle())
                     .accessibilityIdentifier("detailSpeakButton")
 
-                    Button(copied ? "已复制" : "复制") {
+                    Button(copied.isOn ? "已复制" : "复制") {
                         UIPasteboard.general.string = character
-                        copied = true
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                            copied = false
-                        }
+                        copied.trigger()
                     }
                     .buttonStyle(PrimaryPillButtonStyle())
                     .accessibilityIdentifier("detailCopyButton")
